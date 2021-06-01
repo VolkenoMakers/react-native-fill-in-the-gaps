@@ -1,4 +1,5 @@
 import React from "react";
+import { ViewStyle } from "react-native";
 import {
   ScrollView,
   TouchableOpacity,
@@ -6,9 +7,26 @@ import {
   Modal,
   Dimensions,
   Text,
+  TextStyle,
 } from "react-native";
 
 const Layout = Dimensions.get("window");
+type FillInTheGapsProps = {
+  additionalWords: Array<string>;
+  content: string;
+  title: string;
+  containerStyle?: ViewStyle;
+  titleStyle?: TextStyle;
+  textContentStyle?: ViewStyle;
+  buttonStyle?: ViewStyle;
+  buttonContainerStyle?: ViewStyle;
+  buttonTitleStyle?: TextStyle;
+  wordStyle?: TextStyle;
+  responseRequired?: boolean;
+  wordsContainerStyle?: ViewStyle;
+  wordContainerStyle?: ViewStyle;
+  onDone: (texts: Array<any>) => any;
+};
 const FillInTheGaps = ({
   additionalWords = [],
   content = "",
@@ -24,7 +42,7 @@ const FillInTheGaps = ({
   wordContainerStyle,
   wordStyle,
   onDone,
-}) => {
+}: FillInTheGapsProps) => {
   const [words, setWords] = React.useState([]);
   const [wordsList, setWordsList] = React.useState([]);
 
@@ -75,22 +93,27 @@ const FillInTheGaps = ({
   }, []);
 
   const [text, setText] = React.useState(null);
-  const onSetText = React.useCallback((text, response) => {
-    const index = texts.findIndex((t) => t?.id === text?.id);
-    texts[index].response = response;
-    setTexts([...texts]);
-    let responses = texts.map((t) => t.response).filter((t) => !!t);
-    setWords([
-      ...wordsList.filter((w) => !responses.includes(w)),
-      ...additionalWords.filter((w) => !responses.includes(w)),
-    ]);
-  });
+  const onSetText = React.useCallback(
+    (text: any, response: string) => {
+      const index = texts.findIndex((t: any) => t?.id === text?.id);
+      texts[index].response = response;
+      setTexts([...texts]);
+      let responses = texts.map((t) => t.response).filter((t) => !!t);
+      setWords([
+        ...wordsList.filter((w) => !responses.includes(w)),
+        ...additionalWords.filter((w) => !responses.includes(w)),
+      ]);
+    },
+    [texts, additionalWords, wordsList]
+  );
+
   const onRemoveText = React.useCallback((text) => {
     const index = texts.findIndex((t) => t?.id === text?.id);
     setWords([...words, texts[index].response]);
     texts[index].response = "";
     setTexts([...texts]);
-  });
+  }, []);
+
   const done = React.useCallback(async () => {
     onDone(
       texts
@@ -102,7 +125,7 @@ const FillInTheGaps = ({
           };
         })
     );
-  });
+  }, []);
   let isValid = true;
   for (let t of texts) {
     if (t.right && !t.response) {
@@ -110,7 +133,6 @@ const FillInTheGaps = ({
       break;
     }
   }
-
   return (
     <View style={{ flex: 1, ...containerStyle }}>
       <Modal
@@ -226,6 +248,7 @@ const FillInTheGaps = ({
         {texts.map((text, i) => {
           return (
             <React.Fragment key={i}>
+              {/*@ts-ignore*/}
               <MyText
                 style={{ fontSize: 14, ...textContentStyle }}
                 text={text.text.trim()}
@@ -267,7 +290,13 @@ const FillInTheGaps = ({
 
 export default FillInTheGaps;
 
-function Space({ onPress, text, wordContainerStyle, wordStyle }) {
+type SpaceProps = {
+  onPress: () => any;
+  text: string;
+  wordContainerStyle: ViewStyle;
+  wordStyle: TextStyle;
+};
+function Space({ onPress, text, wordContainerStyle, wordStyle }: SpaceProps) {
   return (
     <Text
       style={{
@@ -288,8 +317,13 @@ function Space({ onPress, text, wordContainerStyle, wordStyle }) {
   );
 }
 
-function Word({ text, wordStyle, wordContainerStyle }) {
-  const style = {
+type WordProps = {
+  text: string;
+  wordStyle: TextStyle;
+  wordContainerStyle: ViewStyle;
+};
+function Word({ text, wordStyle, wordContainerStyle }: WordProps) {
+  const style: ViewStyle = {
     minHeight: 23,
     width: 80,
     paddingHorizontal: 10,
@@ -302,7 +336,7 @@ function Word({ text, wordStyle, wordContainerStyle }) {
   };
   if (text) delete style.width;
   return (
-    <View style={{ ...style }}>
+    <View style={style}>
       {!!text && (
         <Text style={{ color: "#000", fontSize: 14, ...wordStyle }}>
           {text}
@@ -312,8 +346,22 @@ function Word({ text, wordStyle, wordContainerStyle }) {
   );
 }
 
-const Button = ({ titleStyle, containerStyle, title, onPress, disabled }) => {
-  const style = {
+type ButtonProps = {
+  titleStyle: TextStyle;
+  containerStyle: ViewStyle;
+  title: string;
+  onPress: () => any;
+  disabled: boolean;
+};
+
+const Button = ({
+  titleStyle,
+  containerStyle,
+  title,
+  onPress,
+  disabled,
+}: ButtonProps) => {
+  const style: ViewStyle = {
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -344,7 +392,11 @@ const Button = ({ titleStyle, containerStyle, title, onPress, disabled }) => {
   );
 };
 
-function MyText({ style, text }) {
+type MyTextProps = {
+  style: TextStyle;
+  text: string;
+};
+function MyText({ style, text }: MyTextProps) {
   return text.split(" ").map((t, i) => (
     <Text key={i} style={style}>
       {"  "}
